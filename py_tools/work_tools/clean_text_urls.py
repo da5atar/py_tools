@@ -59,6 +59,9 @@ def clean_url(url):
     except requests.exceptions.RequestException:
         # If any error occurs, return the original URL
         return url
+    finally:
+        if response:
+            response.close()
 
 
 def extract_links(html_text):
@@ -70,33 +73,34 @@ def extract_links(html_text):
     return links
 
 
+import re
+
 def extract_links_markdown(md_text):
     """
     Extract all links from Markdown text using regex.
     """
-    import re
     # Pattern for Markdown links: [text](url)
     link_pattern = re.compile(r'\[.*?\]\((https?://.*?)\)')
     links = link_pattern.findall(md_text)
     return links
 
 
-def replace_links(html_text):
+def clean_links_in_text(text):
     """
-    Replace tracking links with cleaned URLs in the original HTML/Markdown text.
+    Clean tracking links in the original HTML/Markdown text.
     """
-    if "<html>" in html_text or "<body>" in html_text:  # HTML content
-        links = extract_links(html_text)
+    if "<html>" in text or "<body>" in text:  # HTML content
+        links = extract_links(text)
     else:  # Markdown content
-        links = extract_links_markdown(html_text)
+        links = extract_links_markdown(text)
 
     cleaned_links = {link: clean_url(link) for link in links}
 
     # Replace each link in the original text
     for original_link, cleaned_link in cleaned_links.items():
-        html_text = html_text.replace(original_link, cleaned_link)
+        text = text.replace(original_link, cleaned_link)
 
-    return html_text
+    return text
 
 
 def process_file(input_file, output_file):
@@ -106,7 +110,7 @@ def process_file(input_file, output_file):
     with open(input_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    cleaned_content = replace_links(content)
+    cleaned_content = clean_links_in_text(content)
 
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(cleaned_content)
@@ -119,20 +123,21 @@ def batch_process(directory, output_directory):
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    for filename in os.listdir(directory):
-        if filename.endswith('.txt') or filename.endswith('.html') or filename.endswith('.md'):
-            input_path = os.path.join(directory, filename)
-            output_path = os.path.join(output_directory, filename)
+    files = [f for f in os.listdir(directory) if f.endswith(('.txt', '.html', '.md'))]
 
-            print(f"Processing file: {input_path}")
-            process_file(input_path, output_path)
-            print(f"Saved cleaned file: {output_path}")
+    for filename in files:
+        input_path = os.path.join(directory, filename)
+        output_path = os.path.join(output_directory, filename)
+
+        print(f"Processing file: {input_path}")
+        process_file(input_path, output_path)
+        print(f"Saved cleaned file: {output_path}")
 
 
 if __name__ == "__main__":
     # Specify the input directory and output directory
-    INPUT_DIRECTORY = "input_files"  # Directory containing input .txt, .html, or .md files
-    OUTPUT_DIRECTORY = "output_files"  # Directory to save processed files
+    INPUT_DIRECTORY = os.path.join(os.getcwd(), "input_files")  # Directory containing input .txt, .html, or .md files
+    OUTPUT_DIRECTORY = os.path.join(os.getcwd(), "output_files")  # Directory to save processed files
 
     # Batch process all files in the input directory
     batch_process(INPUT_DIRECTORY, OUTPUT_DIRECTORY)
