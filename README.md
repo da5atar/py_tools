@@ -1,6 +1,7 @@
 # py_tools
 
 A collection of useful Python scripts for various system and productivity tasks.
+This collection serves for experimenting, learning as well as utilizing python for solving common tasks.
 
 ## Table of Contents
 
@@ -79,7 +80,7 @@ Massamba Sow and the open-source community.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](MIT.txt) for details.
+This project is licensed under the CC0 1.0 License. See [LICENSE](LICENSE) for details.
 
 ## Badges
 
